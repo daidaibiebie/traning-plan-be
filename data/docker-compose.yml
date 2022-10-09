@@ -1,0 +1,9 @@
+version: "3"
+services: 
+  mysql:
+    build: ./mysql
+    container_name: mmysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "course"
+    network_mode: host # 使用 host 网络模式，不需要指定网络名称
