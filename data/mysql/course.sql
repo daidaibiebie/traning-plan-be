@@ -1,7 +1,7 @@
 
 -- Table structure for employees
 -- ----------------------------
-
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
 SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS `course`;
 SET FOREIGN_KEY_CHECKS=1;
