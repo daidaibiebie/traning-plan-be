@@ -250,7 +250,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.1.1"
+        message: "v1.1.2"
     })
 })
 
