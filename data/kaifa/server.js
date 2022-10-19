@@ -201,28 +201,29 @@ app.delete('/endcourse/:eid', function(req, res) {
 
 //修改课程父节点
 app.post('/dropcourse', function(req, res) {
-    let {
-        courses_eid,
-        cou_parent_id
-    } = req.body
-    console.log(req.body)
-    let sql = `UPDATE course SET cou_parent_id=` + JSON.stringify(cou_parent_id) + `where course_eid=` + JSON.stringify(courses_eid)
-    connection.query(sql, function(err, result) {
-        if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
-        } else {
+        let {
+            courses_eid,
+            cou_parent_id
+        } = req.body
+        console.log(req.body)
+        let sql = `UPDATE course SET cou_parent_id=` + JSON.stringify(cou_parent_id) + `where course_eid=` + JSON.stringify(courses_eid)
+        connection.query(sql, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
 
-            res.send({
-                code: 200,
-                message: "修改成功"
-            })
-        }
+                res.send({
+                    code: 200,
+                    message: "修改成功"
+                })
+            }
+        })
+
     })
-
-})
+    //修改模块父节点
 app.post('/dropmodule', function(req, res) {
     let {
         module_eid,
@@ -245,6 +246,12 @@ app.post('/dropmodule', function(req, res) {
         }
     })
 
+})
+app.get('/', function(req, res) {
+    res.send({
+        code: 200,
+        message: "v1.1.1"
+    })
 })
 
 const todos = app.listen(8088, 'localhost', function() {
