@@ -1,15 +1,15 @@
 
 -- Table structure for employees
 -- ----------------------------
-ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '1234';
 SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS `course`;
 SET FOREIGN_KEY_CHECKS=1;
 CREATE TABLE `course`  (
   `course_eid` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `code` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  NULL  COMMENT '课程代号',
-  `name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  NULL  COMMENT '课程名',
-  `englishName` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  NULL  COMMENT '课程英文名',
+  `code` char(100)  NOT NULL DEFAULT 0 COMMENT'课程代号',
+  `name` char(100)  NOT NULL UNIQUE DEFAULT  0 COMMENT '课程名',
+  `englishName` char(100)  NOT NULL UNIQUE DEFAULT 0 COMMENT '课程英文名',
   `credits` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  NULL  COMMENT '学分',
   `total_hour` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  NULL  COMMENT '总学时',
   `teacher_hour` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  NULL  COMMENT '授课时长',
