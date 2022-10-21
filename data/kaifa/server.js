@@ -11,7 +11,7 @@ var mysql = require('mysql');
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: '123456',
     port: '3306',
     database: 'course'
 });
@@ -225,28 +225,29 @@ app.post('/dropcourse', function(req, res) {
     })
     //修改模块父节点
 app.post('/dropmodule', function(req, res) {
-    let {
-        module_eid,
-        mod_parent_id
-    } = req.body
-    console.log(req.body)
-    let sql = `UPDATE module SET mod_parent_id=` + JSON.stringify(mod_parent_id) + `where module_eid =` + JSON.stringify(module_eid)
-    connection.query(sql, function(err, result) {
-        if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
-        } else {
+        let {
+            module_eid,
+            mod_parent_id
+        } = req.body
+        console.log(req.body)
+        let sql = `UPDATE module SET mod_parent_id=` + JSON.stringify(mod_parent_id) + `where module_eid =` + JSON.stringify(module_eid)
+        connection.query(sql, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
 
-            res.send({
-                code: 200,
-                message: "修改成功"
-            })
-        }
+                res.send({
+                    code: 200,
+                    message: "修改成功"
+                })
+            }
+        })
+
     })
-
-})
+    //测试接口
 app.get('/', function(req, res) {
     res.send({
         code: 200,
