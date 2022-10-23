@@ -11,7 +11,7 @@ var mysql = require('mysql');
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: '123456',
     port: '3306',
     database: 'course'
 });
@@ -72,13 +72,15 @@ app.get('/module', function(req, res) {
         })
     })
     //查询指定模块课程
-app.get('/courses/designated', function(req, res) {
-        let {
-            cou_parent_id
-        } = req.body
-        console.log(req.body)
-        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id=' + JSON.stringify(cou_parent_id)
-        connection.query(sql, function(err, result) {
+app.get('/courses/designated/:id', function(req, res) {
+        const id = req.params.id
+        if (!id) {
+            return res.status(400).json({
+                message: "invalid parameters"
+            })
+        }
+        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id =?'
+        connection.query(sql, id, function(err, result) {
             if (err) {
                 return res.send({
                     code: 400,
@@ -179,9 +181,39 @@ app.post('/startcourse', function(req, res) {
     })
     //删除课程
 app.delete('/endcourse/:eid', function(req, res) {
+        const eid = req.params.eid
+        if (eid) {
+            return res.status(400).json({
+                message: "invalid parameters"
+            })
+        }
+        let sql = `DELETE from course where course_eid=?`
+        connection.query(sql, eid, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+
+                res.send({
+                    code: 200,
+                    message: "删除成功"
+                })
+            }
+        })
+
+    })
+    //删除指定模块
+app.delete('/endmodule/:eid', function(req, res) {
     const eid = req.params.eid
-    let sql = `DELETE from course where course_eid=?`
-    connection.query(sql, eid, function(err, result) {
+    if (!eid) {
+        return res.status(400).json({
+            message: "invalid parameters"
+        })
+    }
+    let sql = `DELETE from module where mod_parent_id=? or module_eid=?`
+    connection.query(sql, [eid, eid], function(err, result) {
         if (err) {
             return res.send({
                 code: 400,
