@@ -9,7 +9,7 @@ services:
 #    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
   nodejs:
     build:
-      context: ./kifa
+      context: ./kafi
       dockerfile: Dockerfile
     container_name: nodejs
     network_mode: host
