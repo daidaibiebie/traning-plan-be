@@ -130,9 +130,11 @@ app.post('/startmodule', function(req, res) {
                 message: err
             })
         } else {
+            result = eval(result)
+            console.log(result.insertId)
             res.send({
                 code: 200,
-                message: "模块添加成功"
+                message: "module_eid = " + result.insertId
             })
         }
     })
@@ -172,10 +174,64 @@ app.post('/startcourse', function(req, res) {
                     message: err
                 })
             } else {
-
+                result = eval(result)
+                console.log(result.insertId)
                 res.send({
                     code: 200,
-                    message: "开课成功"
+                    message: "course_eid = " + result.insertId
+                })
+            }
+        })
+    })
+    //修改课程信息
+app.put('/revise/course/:eid', function(req, res) {
+        let {
+            code,
+            name,
+            englishName,
+            credits,
+            total_hour,
+            teacher_hour,
+            practice_hour,
+            experiment_hour,
+            in_class,
+            out_class,
+            term,
+            exam,
+            start,
+            remark,
+            cou_expect_score,
+            on_group,
+            cou_parent_id
+        } = req.body
+        let eid = req.params.eid
+        console.log(req.body)
+        let sql = `UPDATE course SET code = ` + JSON.stringify(code) + `,name = ` + JSON.stringify(name) + `,englishName = ` + JSON.stringify(englishName) + `,credits = ` + JSON.stringify(credits) + `,total_hour=` +
+            JSON.stringify(total_hour) + `,teacher_hour=` + JSON.stringify(teacher_hour) + `,practice_hour=` + JSON.stringify(practice_hour) + `,experiment_hour=` +
+            JSON.stringify(experiment_hour) + `,in_class=` + JSON.stringify(in_class) + `,out_class=` + JSON.stringify(out_class) + `,term=` + JSON.stringify(term) + `,exam=` +
+            JSON.stringify(exam) + `,start=` + JSON.stringify(start) + `,remark=` + JSON.stringify(remark) + `,cou_expect_score=` + JSON.stringify(cou_expect_score) + `,on_group=` +
+            JSON.stringify(on_group) + `,cou_parent_id=` + JSON.stringify(cou_parent_id) + `where course_eid=?`
+        connection.query(sql, eid, function(err, result) {
+            if (err) {
+                if (err.code = "ER_DUP_ENTRY") {
+                    res.send({
+                        code: 400,
+                        message: "该课程名或英文名已存在,修改失败"
+                    })
+                } else if (err.code = "ER_BAD_NULL_ERROR") {
+                    res.send({
+                        code: 400,
+                        message: "课程代号,课程名,课程英文名不得为空"
+                    })
+                }
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+                res.send({
+                    code: 200,
+                    message: "修改课程信息成功"
                 })
             }
         })
@@ -196,7 +252,6 @@ app.delete('/endcourse/:eid', function(req, res) {
                     message: err
                 })
             } else {
-
                 res.send({
                     code: 200,
                     message: "删除成功"
@@ -349,7 +404,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.2.7 delete over"
+        message: "v1.2.8 put over,output id over"
     })
 })
 
