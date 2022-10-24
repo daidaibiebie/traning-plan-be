@@ -11,7 +11,7 @@ var mysql = require('mysql');
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: '123456',
     port: '3306',
     database: 'course'
 });
@@ -79,6 +79,7 @@ app.get('/courses/designated/:id', function(req, res) {
                 message: "invalid parameters"
             })
         }
+        console.log(id)
         let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id =?'
         connection.query(sql, id, function(err, result) {
             if (err) {
@@ -207,20 +208,25 @@ app.delete('/endcourse/:eid', function(req, res) {
     //删除指定模块
 app.delete('/endmodule/:eid', function(req, res) {
     const eid = req.params.eid
+    console.log(eid)
     if (!eid) {
         return res.status(400).json({
             message: "invalid parameters"
         })
+    } else if (eid == 1) {
+        return res.status(400).json({
+            message: "该模块不允许删除"
+        })
     }
-    let sql = `DELETE from module where mod_parent_id=? or module_eid=?`
-    connection.query(sql, [eid, eid], function(err, result) {
+    let sql = `delete  from module where module_eid in (` + eid + `)`
+    connection.query(sql, function(err, result) {
         if (err) {
             return res.send({
                 code: 400,
                 message: err
             })
         } else {
-
+            deletemoudule(eid)
             res.send({
                 code: 200,
                 message: "删除成功"
@@ -229,6 +235,54 @@ app.delete('/endmodule/:eid', function(req, res) {
     })
 
 })
+
+function deletemoudule(eid) {
+    let sql = `select * from module where mod_parent_id  in (` + eid + `)`
+    connection.query(sql, function(err, result) {
+        if (err) {
+            return 0
+        }
+        console.log(result.length)
+        if (result.length) {
+            for (var i in result) {
+                console.log((result[i].module_eid))
+                let sql1 = `delete from module where module_eid in (` + (result[i].module_eid) + ")"
+                let sql2 = `select * from module where mod_parent_id  in (` + (result[i].module_eid) + `)`
+                connection.query(sql2, function(err, result2) {
+                    connection.query(sql1, function(err, result1) {
+                        if (err) {
+                            return 2
+                        }
+                    })
+                    for (var n in result2) {
+                        console.log((result2[n].module_eid))
+                        if (err) {
+                            return 3
+                        } else {
+                            deletemoudule(result2[n].module_eid)
+                        }
+                    }
+                })
+            }
+        } else if (result.length == 0) {
+            let sql3 = `delete from module where module_eid in (` + (eid) + ")"
+            let sql4 = `delete from course where cou_parent_id in (` + (eid) + ")"
+            connection.query(sql3, function(err, result) {
+                if (err) {
+                    return 2
+                }
+            })
+            connection.query(sql4, function(err, result) {
+                if (err) {
+                    return 3
+                }
+            })
+        } else {
+            console.log(1)
+            return 1
+        }
+    })
+}
 
 
 //修改课程父节点
@@ -283,7 +337,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.1.6"
+        message: "v1.2.7 delete over"
     })
 })
 
