@@ -226,11 +226,23 @@ app.delete('/endmodule/:eid', function(req, res) {
                 message: err
             })
         } else {
-            deletemoudule(eid)
-            res.send({
-                code: 200,
-                message: "删除成功"
-            })
+            console.log(JSON.stringify(result))
+            console.log((JSON.stringify(result))[31])
+            if ((JSON.stringify(result))[31] != "0") {
+                deletemoudule(eid)
+                res.send({
+                    code: 200,
+                    message: "删除成功"
+                })
+            } else {
+                res.send({
+                    code: 400,
+                    message: '删除错误'
+                })
+
+            }
+
+
         }
     })
 
