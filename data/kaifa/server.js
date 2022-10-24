@@ -236,6 +236,36 @@ app.put('/revise/course/:eid', function(req, res) {
             }
         })
     })
+    //修改模块信息
+app.put('/revise/module/:eid', function(req, res) {
+        let {
+            name,
+            expect_score
+        } = req.body
+        let eid = req.params.eid
+        console.log(req.body)
+        if (eid == 1) {
+            return res.send({
+                code: 400,
+                message: "该模块不能被修改"
+            })
+        } else {
+            let sql = `UPDATE module set name=` + JSON.stringify(name) + `,expect_score=` + JSON.stringify(expect_score) + `where module_eid=?`
+            connection.query(sql, eid, function(err, result) {
+                if (err) {
+                    return res.send({
+                        code: 400,
+                        message: err
+                    })
+                } else {
+                    res.send({
+                        code: 200,
+                        message: "模块修改成功"
+                    })
+                }
+            })
+        }
+    })
     //删除课程
 app.delete('/endcourse/:eid', function(req, res) {
         const eid = req.params.eid
