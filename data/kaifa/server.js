@@ -17,12 +17,16 @@ const connection = mysql.createConnection({
 });
 
 connection.connect(err => {
-    if (err) {
-        console.error('failed to connect to database, error: ', err)
-        process.exit(1)
-    }
-})
+        if (err) {
+            console.error('failed to connect to database, error: ', err)
+            process.exit(1)
+        }
+    })
+    //防止异常退出
 
+process.on('uncaughtException', function(err) {
+    console.log('Caught exception: ' + err);
+});
 
 //跨域访问
 app.all('*', function(req, res, next) {
@@ -434,7 +438,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.2.8 put over,output id over"
+        message: "v1.2.9 Caught err over"
     })
 })
 
