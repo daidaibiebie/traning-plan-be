@@ -1,4 +1,5 @@
 var express = require('express');
+const res = require('express/lib/response');
 const {
     json
 } = require('express/lib/response');
@@ -6,6 +7,9 @@ var router = express.Router();
 var app = express();
 app.use(express.json());
 var mysql = require('mysql');
+const {
+    CLIENT_NO_SCHEMA
+} = require('mysql/lib/protocol/constants/client');
 
 //数据库连接
 const connection = mysql.createConnection({
@@ -58,24 +62,64 @@ app.get('/allcourses', function(req, res) {
         })
     })
     //查询树状关系
-app.get('/module', function(req, res) {
-        let sql = 'SELECT * from module '
+
+
+function designatedcourse(eid) {
+    return new Promise(function(resolve, reject) {
+        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id =' + JSON.stringify(eid)
         connection.query(sql, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                return 1
             } else {
-                res.send({
-                    "status": "ok",
-                    "code": 200,
-                    "data": result
-                })
+                // result = JSON.stringify(result)
+                // console.log(JSON.stringify(result)
+                resolve(result)
             }
-        })
+        });
+    });
+}
+app.get('/module', function(req, res) {
+    let sql = 'SELECT * from module'
+    connection.query(sql, async(err, result) => {
+        if (err) {
+            return res.send({
+                code: 400,
+                message: err
+            })
+        } else {
+            //returnArr={名字，iD，lessonArr}
+            //查询对应id模块的lessonArr
+            var returnArr = [];
+            for (var i = 0; i < result.length; i++) {
+                var obj = {};
+                obj.module_eid = '';
+                obj.name = '';
+                obj.mod_parent_id = '';
+                obj.expect_score = '';
+                obj.lessonArr = '',
+                    returnArr.push(obj);
+            }
+            for (var i in result) {
+                const returnLesson = await designatedcourse(result[i].module_eid)
+
+                // console.log(option)
+                // returnArr[i].lessonArr.push(option)
+                returnArr[i].lessonArr = returnLesson
+                returnArr[i].module_eid = result[i].module_eid
+                returnArr[i].name = result[i].name
+                returnArr[i].mod_parent_id = result[i].mod_parent_id
+                returnArr[i].expect_score = result[i].expect_score
+            }
+            res.send({
+                "status": "ok",
+                "code": 200,
+                "data": returnArr
+            })
+        }
     })
-    //查询指定模块课程
+})
+
+//查询指定模块课程
 app.get('/courses/designated/:id', function(req, res) {
         const id = req.params.id
         if (!id) {
@@ -138,7 +182,8 @@ app.post('/startmodule', function(req, res) {
             console.log(result.insertId)
             res.send({
                 code: 200,
-                message: "module_eid = " + result.insertId
+                message: "模块添加成功",
+                data: JSON.stringify(result.insertId)
             })
         }
     })
@@ -182,7 +227,8 @@ app.post('/startcourse', function(req, res) {
                 console.log(result.insertId)
                 res.send({
                     code: 200,
-                    message: "course_eid = " + result.insertId
+                    message: "课程添加成功",
+                    data: JSON.stringify(result.insertId)
                 })
             }
         })
@@ -438,7 +484,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.2.9 Caught err over"
+        message: "v1.2.10 returnArr over"
     })
 })
 
