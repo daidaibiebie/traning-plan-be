@@ -20,14 +20,28 @@ const connection = mysql.createConnection({
     database: 'course'
 });
 
-connection.connect(err => {
+function handleDisconnection() {
+    connection.connect(err => {
         if (err) {
             console.error('failed to connect to database, error: ', err)
             process.exit(1)
         }
     })
-    //防止异常退出
+    connection.on('error', function(err) {
+        logger.error('db error', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            logger.error('db error执行重连:' + err.message);
+            handleDisconnection();
+        } else {
+            throw err;
+        }
+    });
+    exports.connection = connection;
+}
+exports.handleDisconnection = handleDisconnection;
 
+
+//防止异常退出
 process.on('uncaughtException', function(err) {
     console.log('Caught exception: ' + err);
 });
@@ -45,28 +59,28 @@ app.all('*', function(req, res, next) {
 
 //查询所有开课信息
 app.get('/allcourses', function(req, res) {
-        let sql = 'SELECT * from module,course where course.cou_parent_id=module.module_eid'
-        connection.query(sql, function(err, result) {
-            if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
-            } else {
-                res.send({
-                    "status": "ok",
-                    "code": 200,
-                    "data": result
-                })
-            }
-        })
+    let sql = 'SELECT * from module,course where course.cou_parent_id=module.module_eid'
+    connection.query(sql, function(err, result) {
+        if (err) {
+            return res.send({
+                code: 400,
+                message: err
+            })
+        } else {
+            res.send({
+                "status": "ok",
+                "code": 200,
+                "data": result
+            })
+        }
     })
-    //查询树状关系
+})
 
 
+//查询树状关系
 function designatedcourse(eid) {
     return new Promise(function(resolve, reject) {
-        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id =' + JSON.stringify(eid)
+        let sql = 'SELECT course_eid,code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id =' + JSON.stringify(eid)
         connection.query(sql, function(err, result) {
             if (err) {
                 return 1
@@ -146,7 +160,81 @@ app.get('/courses/designated/:id', function(req, res) {
     })
     //查询数据库注释
 app.get('/comment', function(req, res) {
-        let sql = 'show full columns from module '
+    let sql = 'show full columns from module '
+    connection.query(sql, function(err, result) {
+        if (err) {
+            return res.send({
+                code: 400,
+                message: err
+            })
+        } else {
+            res.send({
+                "status": "ok",
+                "code": 200,
+                "data": result
+            })
+        }
+    })
+})
+
+function stag(eid) {
+    return new Promise(function(resolve, reject) {
+        let sql = 'SELECT tag from course where course_eid =' + JSON.stringify(eid)
+        connection.query(sql, function(err, result) {
+            if (err) {
+                return 1
+            } else {
+                result = JSON.stringify(result);
+                resolve(result)
+            }
+        });
+    });
+}
+//删除课程标签
+app.put('/changetag/:id', async(req, res) => {
+    let {
+        dtag
+    } = req.body
+    if (!dtag) {
+        return res.send({
+            code: 412,
+            message: '注意部分参数不能为空'
+        })
+    }
+    const id = req.params.id
+    const tag = JSON.parse(await stag(id))
+    const tag1 = tag[0].tag
+    const ntag = tag1.split(";")
+    for (var i = 0; i < ntag.length; i++) {
+        if (ntag[i] === dtag) {
+            ntag.splice(i, 1);
+        }
+    }
+    console.log(ntag)
+    var newarr = ntag.join(';')
+    console.log(newarr)
+    let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
+    connection.query(sql, id, function(err, result) {
+        if (err) {
+            return res.send({
+                code: 400,
+                message: err
+            })
+        } else {
+            res.send({
+                code: 200,
+                message: "课程标签删除成功"
+            })
+        }
+    })
+})
+
+//查询带该标签的课程
+app.get('/stag', function(req, res) {
+        let {
+            tag
+        } = req.body
+        let sql = `SELECT * from course,module where course.cou_parent_id = module.module_eid and course.tag like ` + JSON.stringify('%' + tag + '%')
         connection.query(sql, function(err, result) {
             if (err) {
                 return res.send({
@@ -155,12 +243,54 @@ app.get('/comment', function(req, res) {
                 })
             } else {
                 res.send({
-                    "status": "ok",
-                    "code": 200,
-                    "data": result
+                    code: 200,
+                    data: result
                 })
             }
         })
+    })
+    //添加课程标签
+app.post('/addtag/:id', async(req, res) => {
+        let {
+            tag
+        } = req.body
+        const id = req.params.id
+        const oldtag = JSON.parse(await stag(id))
+        const oldtag1 = oldtag[0].tag
+        console.log(oldtag1)
+        if (oldtag1 != null) {
+            const newtag = [oldtag1, tag].join(';')
+            console.log(newtag)
+            let sql = `UPDATE course set tag = ` + JSON.stringify(newtag) + `where course_eid=?`
+            connection.query(sql, id, function(err, result) {
+                if (err) {
+                    return res.send({
+                        code: 400,
+                        message: err
+                    })
+                } else {
+                    res.send({
+                        code: 200,
+                        message: "课程标签添加成功",
+                    })
+                }
+            })
+        } else {
+            let sql = `UPDATE course set tag = ` + JSON.stringify(tag) + `where course_eid=?`
+            connection.query(sql, id, function(err, result) {
+                if (err) {
+                    return res.send({
+                        code: 400,
+                        message: err
+                    })
+                } else {
+                    res.send({
+                        code: 200,
+                        message: "课程标签创建成功",
+                    })
+                }
+            })
+        }
     })
     //添加课程模块
 app.post('/startmodule', function(req, res) {
@@ -170,6 +300,12 @@ app.post('/startmodule', function(req, res) {
         expect_score
     } = req.body
     console.log(req.body)
+    if (!name || !mod_parent_id) {
+        return res.send({
+            code: 412,
+            message: '注意部分参数不能为空'
+        })
+    }
     let sql = `INSERT INTO module(name,mod_parent_id,expect_score) VALUES ('${name}','${mod_parent_id}','${expect_score}')`
     connection.query(sql, function(err, result) {
         if (err) {
@@ -187,8 +323,22 @@ app.post('/startmodule', function(req, res) {
             })
         }
     })
-})
+});;;
 
+function judgemodule(id) {
+    let sql = "SELECT * from module where module_eid=" + JSON.stringify(id)
+    connection.query(sql, function(err, result) {
+        if (err) {
+            return res.send({
+                code: 400,
+                message: err
+            })
+        } else {
+
+        }
+
+    })
+}
 
 //添加开课课程
 app.post('/startcourse', function(req, res) {
@@ -211,12 +361,21 @@ app.post('/startcourse', function(req, res) {
             on_group,
             cou_parent_id
         } = req.body
+        if (!code || !name || !englishName || !credits || !total_hour || !term || !exam || !start || !cou_parent_id) {
+            return res.send({
+                code: 412,
+                message: '注意部分参数不能为空'
+            })
+        }
         console.log(req.body)
         let sql = `INSERT INTO course(code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_expect_score,on_group,cou_parent_id) VALUES('${code}','${name}','${englishName}','${credits}','${total_hour}','${teacher_hour}','${practice_hour}','${experiment_hour}','${in_class}','${out_class}','${term}','${exam}','${start}','${remark}','${cou_expect_score}','${on_group}','${cou_parent_id}')`
         connection.query(sql, function(err, result) {
             if (err) {
                 if (err.code = "ER_DUP_ENTRY") {
-                    return res.send('该课程名已存在')
+                    return res.send({
+                        code: 206,
+                        message: '该课程名已存在'
+                    })
                 }
                 return res.send({
                     code: 400,
@@ -255,6 +414,12 @@ app.put('/revise/course/:eid', function(req, res) {
             cou_parent_id
         } = req.body
         let eid = req.params.eid
+        if (!code || !mame || !englishName || !credits || !total_hour || !term || !exam || !start || !cou_parent_id) {
+            return res.send({
+                code: 412,
+                message: '注意部分参数不能为空'
+            })
+        }
         console.log(req.body)
         let sql = `UPDATE course SET code = ` + JSON.stringify(code) + `,name = ` + JSON.stringify(name) + `,englishName = ` + JSON.stringify(englishName) + `,credits = ` + JSON.stringify(credits) + `,total_hour=` +
             JSON.stringify(total_hour) + `,teacher_hour=` + JSON.stringify(teacher_hour) + `,practice_hour=` + JSON.stringify(practice_hour) + `,experiment_hour=` +
@@ -265,12 +430,12 @@ app.put('/revise/course/:eid', function(req, res) {
             if (err) {
                 if (err.code = "ER_DUP_ENTRY") {
                     res.send({
-                        code: 400,
+                        code: 206,
                         message: "该课程名或英文名已存在,修改失败"
                     })
                 } else if (err.code = "ER_BAD_NULL_ERROR") {
                     res.send({
-                        code: 400,
+                        code: 412,
                         message: "课程代号,课程名,课程英文名不得为空"
                     })
                 }
@@ -293,10 +458,16 @@ app.put('/revise/module/:eid', function(req, res) {
             expect_score
         } = req.body
         let eid = req.params.eid
+        if (!name) {
+            return res.send({
+                code: 412,
+                message: '注意部分参数不能为空'
+            })
+        }
         console.log(req.body)
         if (eid == 1) {
             return res.send({
-                code: 400,
+                code: 403,
                 message: "该模块不能被修改"
             })
         } else {
@@ -484,7 +655,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.2.10 returnArr over"
+        message: "v1.2.11 course_eid tag over"
     })
 })
 
