@@ -37,6 +37,7 @@ function handleDisconnection() {
         }
     });
     exports.connection = connection;
+
 }
 exports.handleDisconnection = handleDisconnection;
 
@@ -192,44 +193,50 @@ function stag(eid) {
 }
 //删除课程标签
 app.put('/changetag/:id', async(req, res) => {
-    let {
-        dtag
-    } = req.body
-    if (!dtag) {
-        return res.send({
-            code: 412,
-            message: '注意部分参数不能为空'
-        })
-    }
-    const id = req.params.id
-    const tag = JSON.parse(await stag(id))
-    const tag1 = tag[0].tag
-    const ntag = tag1.split(";")
-    for (var i = 0; i < ntag.length; i++) {
-        if (ntag[i] === dtag) {
-            ntag.splice(i, 1);
-        }
-    }
-    console.log(ntag)
-    var newarr = ntag.join(';')
-    console.log(newarr)
-    let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
-    connection.query(sql, id, function(err, result) {
-        if (err) {
+        let {
+            dtag
+        } = req.body
+        if (!dtag) {
             return res.send({
-                code: 400,
-                message: err
-            })
-        } else {
-            res.send({
-                code: 200,
-                message: "课程标签删除成功"
+                code: 412,
+                message: '注意部分参数不能为空'
             })
         }
+        const id = req.params.id
+        const tag = JSON.parse(await stag(id))
+        const tag1 = tag[0].tag
+        const ntag = tag1.split(";")
+        for (var i = 0; i < ntag.length; i++) {
+            if (ntag[i] === dtag) {
+                ntag.splice(i, 1);
+            }
+        }
+        console.log(ntag)
+        var newarr = ntag.join(';')
+        console.log(newarr)
+        let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
+        connection.query(sql, id, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+                res.send({
+                    code: 200,
+                    message: "课程标签删除成功"
+                })
+            }
+        })
     })
-})
-
-//查询带该标签的课程
+    // function sum(arr) {
+    //     var s = 0;
+    //     for (var i=arr.length-1; i>=0; i--) {
+    //       s += arr[i];
+    //     }
+    //     return s;
+    //   }  
+    //查询带该标签的课程
 app.get('/stag', function(req, res) {
         let {
             tag
@@ -242,8 +249,19 @@ app.get('/stag', function(req, res) {
                     message: err
                 })
             } else {
+                console.log(result.length)
+                var totalCredit = 0
+                var totalHour = 0
+                for (var i in result) {
+                    totalCredit += parseFloat(result[i].credits)
+                    totalHour += parseFloat(result[i].total_hour)
+                }
+                console.log(totalCredit)
+                console.log(totalHour)
                 res.send({
                     code: 200,
+                    totalCredit: totalCredit,
+                    totalHour: totalHour,
                     data: result
                 })
             }
