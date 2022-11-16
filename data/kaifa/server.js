@@ -23,8 +23,7 @@ const connection = mysql.createConnection({
 function handleDisconnection() {
     connection.connect(err => {
         if (err) {
-            console.error('failed to connect to database, error: ', err)
-            process.exit(1)
+            setTimeout('handleDisconnection()', 2000);
         }
     })
     connection.on('error', function(err) {
@@ -191,52 +190,80 @@ function stag(eid) {
         });
     });
 }
-//删除课程标签
-app.put('/changetag/:id', async(req, res) => {
-        let {
-            dtag
-        } = req.body
-        if (!dtag) {
+//获取所有tag
+app.get('/alltags', function(req, res) {
+    let sql = `SELECT tag from course`
+    connection.query(sql, function(err, result) {
+        if (err) {
             return res.send({
-                code: 412,
-                message: '注意部分参数不能为空'
+                code: 400,
+                message: err
+            })
+        } else {
+            let tag = []
+                // console.log(result.length)
+            for (var i in result) {
+                // console.log(result[i].tag)
+                if (JSON.stringify(result[i].tag) != "null") {
+                    const ntag = result[i].tag.split(";")
+                        // console.log(ntag)
+                    for (var n in ntag) {
+                        // console.log(ntag[n])
+                        // console.log(tag.indexOf(ntag[n]))
+                        if (tag.indexOf(ntag[n]) == -1) {
+                            tag.push.apply(tag, ntag)
+                        }
+                    }
+                    console.log(tag)
+                }
+            }
+            res.send({
+                code: 200,
+                tag: tag
             })
         }
-        const id = req.params.id
-        const tag = JSON.parse(await stag(id))
-        const tag1 = tag[0].tag
-        const ntag = tag1.split(";")
-        for (var i = 0; i < ntag.length; i++) {
-            if (ntag[i] === dtag) {
-                ntag.splice(i, 1);
-            }
-        }
-        console.log(ntag)
-        var newarr = ntag.join(';')
-        console.log(newarr)
-        let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
-        connection.query(sql, id, function(err, result) {
-            if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
-            } else {
-                res.send({
-                    code: 200,
-                    message: "课程标签删除成功"
-                })
-            }
-        })
     })
-    // function sum(arr) {
-    //     var s = 0;
-    //     for (var i=arr.length-1; i>=0; i--) {
-    //       s += arr[i];
-    //     }
-    //     return s;
-    //   }  
-    //查询带该标签的课程
+})
+
+//删除课程标签
+app.put('/changetag/:id', async(req, res) => {
+    let {
+        dtag
+    } = req.body
+    if (!dtag) {
+        return res.send({
+            code: 412,
+            message: '注意部分参数不能为空'
+        })
+    }
+    const id = req.params.id
+    const tag = JSON.parse(await stag(id))
+    const tag1 = tag[0].tag
+    const ntag = tag1.split(";")
+    for (var i = 0; i < ntag.length; i++) {
+        if (ntag[i] === dtag) {
+            ntag.splice(i, 1);
+        }
+    }
+    console.log(ntag)
+    var newarr = ntag.join(';')
+    console.log(newarr)
+    let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
+    connection.query(sql, id, function(err, result) {
+        if (err) {
+            return res.send({
+                code: 400,
+                message: err
+            })
+        } else {
+            res.send({
+                code: 200,
+                message: "课程标签删除成功"
+            })
+        }
+    })
+})
+
 app.get('/stag', function(req, res) {
         let {
             tag
@@ -673,7 +700,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.2.11 tag_credit over"
+        message: "v1.2.11 alltags over"
     })
 })
 
