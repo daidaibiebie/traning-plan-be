@@ -7,6 +7,7 @@ var router = express.Router();
 var app = express();
 app.use(express.json());
 var mysql = require('mysql');
+const { CLIENT_REMEMBER_OPTIONS } = require('mysql/lib/protocol/constants/client');
 const {
     CLIENT_NO_SCHEMA
 } = require('mysql/lib/protocol/constants/client');
@@ -80,7 +81,7 @@ app.get('/allcourses', function(req, res) {
 //查询树状关系
 function designatedcourse(eid) {
     return new Promise(function(resolve, reject) {
-        let sql = 'SELECT course_eid,code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id =' + JSON.stringify(eid)
+        let sql = 'SELECT course_eid,code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id,tag from course where cou_parent_id =' + JSON.stringify(eid)
         connection.query(sql, function(err, result) {
             if (err) {
                 return 1
@@ -115,9 +116,8 @@ app.get('/module', function(req, res) {
             }
             for (var i in result) {
                 const returnLesson = await designatedcourse(result[i].module_eid)
-
-                // console.log(option)
-                // returnArr[i].lessonArr.push(option)
+                    // console.log(option)
+                    // returnArr[i].lessonArr.push(option)
                 returnArr[i].lessonArr = returnLesson
                 returnArr[i].module_eid = result[i].module_eid
                 returnArr[i].name = result[i].name
@@ -142,7 +142,7 @@ app.get('/courses/designated/:id', function(req, res) {
             })
         }
         console.log(id)
-        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id from course where cou_parent_id =?'
+        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id,tag from course where cou_parent_id =?'
         connection.query(sql, id, function(err, result) {
             if (err) {
                 return res.send({
@@ -190,8 +190,8 @@ function stag(eid) {
         });
     });
 }
-//获取所有tag
-app.get('/alltags', function(req, res) {
+//获取课程tag
+app.get('/allCtags', function(req, res) {
     let sql = `SELECT tag from course`
     connection.query(sql, function(err, result) {
         if (err) {
@@ -200,6 +200,7 @@ app.get('/alltags', function(req, res) {
                 message: err
             })
         } else {
+            // console.log(result)
             let tag = []
                 // console.log(result.length)
             for (var i in result) {
@@ -214,9 +215,10 @@ app.get('/alltags', function(req, res) {
                             tag.push.apply(tag, ntag)
                         }
                     }
-                    console.log(tag)
+
                 }
             }
+            console.log(tag)
             res.send({
                 code: 200,
                 tag: tag
@@ -226,49 +228,49 @@ app.get('/alltags', function(req, res) {
 })
 
 //删除课程标签
-app.put('/changetag/:id', async(req, res) => {
-    let {
-        dtag
-    } = req.body
-    if (!dtag) {
-        return res.send({
-            code: 412,
-            message: '注意部分参数不能为空'
-        })
-    }
-    const id = req.params.id
-    const tag = JSON.parse(await stag(id))
-    const tag1 = tag[0].tag
-    const ntag = tag1.split(";")
-    for (var i = 0; i < ntag.length; i++) {
-        if (ntag[i] === dtag) {
-            ntag.splice(i, 1);
-        }
-    }
-    console.log(ntag)
-    var newarr = ntag.join(';')
-    console.log(newarr)
-    let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
-    connection.query(sql, id, function(err, result) {
-        if (err) {
+app.put('/changeCtag/:id', async(req, res) => {
+        let {
+            dtag
+        } = req.body
+        if (!dtag) {
             return res.send({
-                code: 400,
-                message: err
-            })
-        } else {
-            res.send({
-                code: 200,
-                message: "课程标签删除成功"
+                code: 412,
+                message: '注意部分参数不能为空'
             })
         }
+        const id = req.params.id
+        const tag = JSON.parse(await stag(id))
+        const tag1 = tag[0].tag
+        const ntag = tag1.split(";")
+        for (var i = 0; i < ntag.length; i++) {
+            if (ntag[i] === dtag) {
+                ntag.splice(i, 1);
+            }
+        }
+        console.log(ntag)
+        var newarr = ntag.join(';')
+        console.log(newarr)
+        let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
+        connection.query(sql, id, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+                res.send({
+                    code: 200,
+                    message: "课程标签删除成功"
+                })
+            }
+        })
     })
-})
-
-app.get('/stag', function(req, res) {
+    //查询带该标签的课程
+app.get('/Ctag', function(req, res) {
         let {
             tag
         } = req.body
-        let sql = `SELECT * from course,module where course.cou_parent_id = module.module_eid and course.tag like ` + JSON.stringify('%' + tag + '%')
+        let sql = `SELECT * from course `
         connection.query(sql, function(err, result) {
             if (err) {
                 return res.send({
@@ -276,12 +278,20 @@ app.get('/stag', function(req, res) {
                     message: err
                 })
             } else {
-                console.log(result.length)
+                let result1 = []
                 var totalCredit = 0
                 var totalHour = 0
                 for (var i in result) {
-                    totalCredit += parseFloat(result[i].credits)
-                    totalHour += parseFloat(result[i].total_hour)
+                    if (JSON.stringify(result[i].tag) != "null") {
+                        const ntag = result[i].tag.split(";")
+                        console.log(ntag)
+                        if (ntag.indexOf(tag) != -1) {
+                            totalCredit += parseFloat(result[i].credits)
+                            totalHour += parseFloat(result[i].total_hour)
+                                // console.log(JSON.parse(result[i]))
+                            result1.push(result[i])
+                        }
+                    }
                 }
                 console.log(totalCredit)
                 console.log(totalHour)
@@ -289,13 +299,13 @@ app.get('/stag', function(req, res) {
                     code: 200,
                     totalCredit: totalCredit,
                     totalHour: totalHour,
-                    data: result
+                    data: result1
                 })
             }
         })
     })
     //添加课程标签
-app.post('/addtag/:id', async(req, res) => {
+app.post('/addCtag/:id', async(req, res) => {
         let {
             tag
         } = req.body
@@ -337,7 +347,69 @@ app.post('/addtag/:id', async(req, res) => {
             })
         }
     })
-    //添加课程模块
+    ///////////////
+    /////////////////
+    //////////////////
+    ///////////////////
+    //////////////////////////
+function mtag(eid) {
+    return new Promise(function(resolve, reject) {
+        let sql = 'SELECT tag from module where module_eid =' + JSON.stringify(eid)
+        connection.query(sql, function(err, result) {
+            if (err) {
+                return 1
+            } else {
+                result = JSON.stringify(result);
+                resolve(result)
+            }
+        });
+    });
+}
+//添加模块标签
+app.post('/addMtag/:id', async(req, res) => {
+    let {
+        tag
+    } = req.body
+    const id = req.params.id
+    const oldtag = JSON.parse(await mtag(id))
+    const oldtag1 = oldtag[0].tag
+    console.log(oldtag1)
+    if (oldtag1 != null) {
+        const newtag = [oldtag1, tag].join(';')
+        console.log(newtag)
+        let sql = `UPDATE module set tag = ` + JSON.stringify(newtag) + `where module_eid=?`
+        connection.query(sql, id, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+                res.send({
+                    code: 200,
+                    message: "模块标签添加成功",
+                })
+            }
+        })
+    } else {
+        let sql = `UPDATE module set tag = ` + JSON.stringify(tag) + `where module_eid=?`
+        connection.query(sql, id, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+                res.send({
+                    code: 200,
+                    message: "模块标签创建成功",
+                })
+            }
+        })
+    }
+})
+
+//添加课程模块
 app.post('/startmodule', function(req, res) {
     let {
         name,
@@ -368,7 +440,111 @@ app.post('/startmodule', function(req, res) {
             })
         }
     })
-});;;
+});
+//删除课程标签
+app.put('/changeMtag/:id', async(req, res) => {
+        let {
+            dtag
+        } = req.body
+        if (!dtag) {
+            return res.send({
+                code: 412,
+                message: '注意部分参数不能为空'
+            })
+        }
+        const id = req.params.id
+        const tag = JSON.parse(await mtag(id))
+        const tag1 = tag[0].tag
+        const ntag = tag1.split(";")
+        for (var i = 0; i < ntag.length; i++) {
+            if (ntag[i] === dtag) {
+                ntag.splice(i, 1);
+            }
+        }
+        console.log(ntag)
+        var newarr = ntag.join(';')
+        console.log(newarr)
+        let sql = `UPDATE module set tag = ` + JSON.stringify(newarr) + `where module_eid=?`
+        connection.query(sql, id, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+                res.send({
+                    code: 200,
+                    message: "模块标签删除成功"
+                })
+            }
+        })
+    })
+    //
+app.get('/mtag', function(req, res) {
+        let {
+            tag
+        } = req.body
+        let sql = `SELECT * from module  `
+        connection.query(sql, function(err, result) {
+            if (err) {
+                return res.send({
+                    code: 400,
+                    message: err
+                })
+            } else {
+                let result1 = []
+                for (var i in result) {
+                    if (JSON.stringify(result[i].tag) != "null") {
+                        const ntag = result[i].tag.split(";")
+                            // console.log(ntag)
+                        if (ntag.indexOf(tag) != -1) {
+                            result1.push(result[i])
+                        }
+                    }
+                }
+                res.send({
+                    code: 200,
+                    data: result1
+                })
+            }
+        })
+    })
+    //获取模块tag
+app.get('/allMtags', function(req, res) {
+    let sql = `SELECT tag from module`
+    connection.query(sql, function(err, result) {
+        if (err) {
+            return res.send({
+                code: 400,
+                message: err
+            })
+        } else {
+            console.log(result)
+            let tag = []
+                // console.log(result.length)
+            for (var i in result) {
+                // console.log(result[i].tag)
+                if (JSON.stringify(result[i].tag) != "null") {
+                    const ntag = result[i].tag.split(";")
+                        // console.log(ntag)
+                    for (var n in ntag) {
+                        // console.log(ntag[n])
+                        // console.log(tag.indexOf(ntag[n]))
+                        if (tag.indexOf(ntag[n]) == -1) {
+                            tag.push.apply(tag, ntag)
+                        }
+                    }
+
+                }
+            }
+            console.log(tag)
+            res.send({
+                code: 200,
+                tag: tag
+            })
+        }
+    })
+})
 
 function judgemodule(id) {
     let sql = "SELECT * from module where module_eid=" + JSON.stringify(id)
@@ -655,7 +831,7 @@ app.post('/dropcourse', function(req, res) {
             cou_parent_id
         } = req.body
         console.log(req.body)
-        let sql = `UPDATE course SET cou_parent_id=` + JSON.stringify(cou_parent_id) + `where course_eid=` + JSON.stringify(courses_eid)
+        let sql = `UPDATE course SET cou_parent_id =` + JSON.stringify(cou_parent_id) + ` where course_eid =` + JSON.stringify(courses_eid)
         connection.query(sql, function(err, result) {
             if (err) {
                 return res.send({
@@ -679,7 +855,7 @@ app.post('/dropmodule', function(req, res) {
             mod_parent_id
         } = req.body
         console.log(req.body)
-        let sql = `UPDATE module SET mod_parent_id=` + JSON.stringify(mod_parent_id) + `where module_eid =` + JSON.stringify(module_eid)
+        let sql = `UPDATE module SET mod_parent_id =` + JSON.stringify(mod_parent_id) + ` where module_eid =` + JSON.stringify(module_eid)
         connection.query(sql, function(err, result) {
             if (err) {
                 return res.send({
