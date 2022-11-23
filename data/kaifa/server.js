@@ -7,7 +7,9 @@ var router = express.Router();
 var app = express();
 app.use(express.json());
 var mysql = require('mysql');
-const { CLIENT_REMEMBER_OPTIONS } = require('mysql/lib/protocol/constants/client');
+const {
+    CLIENT_REMEMBER_OPTIONS
+} = require('mysql/lib/protocol/constants/client');
 const {
     CLIENT_NO_SCHEMA
 } = require('mysql/lib/protocol/constants/client');
@@ -16,30 +18,31 @@ const {
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: '123456',
     port: '3306',
     database: 'course'
 });
 
-function handleDisconnection() {
-    connection.connect(err => {
+function handleDisconnect() {
+    connection.connect(function(err) {
         if (err) {
-            setTimeout('handleDisconnection()', 2000);
+            console.log('error when connecting to db:', err);
+            setTimeout(handleDisconnect, 2000);
         }
-    })
+    });
     connection.on('error', function(err) {
-        logger.error('db error', err);
+        console.log('db error', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            logger.error('db error执行重连:' + err.message);
-            handleDisconnection();
+            handleDisconnect();
         } else {
             throw err;
         }
     });
-    exports.connection = connection;
-
 }
-exports.handleDisconnection = handleDisconnection;
+setInterval(function() {
+    connection.query('SELECT 1');
+}, 5000);
+handleDisconnect();
 
 
 //防止异常退出
@@ -876,15 +879,12 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "v1.2.11 alltags over"
+        message: "connect over"
     })
 })
 
 const todos = app.listen(8088, 'localhost', function() {
-
     const host = todos.address().address
     const port = todos.address().port
     console.log("应用实例，访问地址为 http://%s:%s", host, port)
-
-
 })
