@@ -10,7 +10,7 @@ CREATE TABLE `module`  (
   `name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT  NULL  COMMENT '课程模块',
   `mod_parent_id` int(11) NULL DEFAULT NULL COMMENT '上级ID',
   `expect_score` varchar(11) NULL DEFAULT NULL COMMENT '学分限制',
-    `tag` char(255) NULL DEFAULT NULL COMMENT  '模块标签',
+  `mod_tag` char(255) NULL DEFAULT NULL COMMENT  '模块标签',
   PRIMARY KEY (`module_eid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 

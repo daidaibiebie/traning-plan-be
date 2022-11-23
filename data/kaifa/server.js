@@ -84,7 +84,7 @@ app.get('/allcourses', function(req, res) {
 //查询树状关系
 function designatedcourse(eid) {
     return new Promise(function(resolve, reject) {
-        let sql = 'SELECT course_eid,code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id,tag from course where cou_parent_id =' + JSON.stringify(eid)
+        let sql = 'SELECT course_eid,code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id,cou_tag from course where cou_parent_id =' + JSON.stringify(eid)
         connection.query(sql, function(err, result) {
             if (err) {
                 return 1
@@ -105,8 +105,9 @@ app.get('/module', function(req, res) {
                 message: err
             })
         } else {
-            //returnArr={名字，iD，lessonArr}
-            //查询对应id模块的lessonArr
+            console.log(JSON.stringify(result[2].mod_tag))
+                //returnArr={名字，iD，lessonArr}
+                //查询对应id模块的lessonArr
             var returnArr = [];
             for (var i = 0; i < result.length; i++) {
                 var obj = {};
@@ -114,6 +115,7 @@ app.get('/module', function(req, res) {
                 obj.name = '';
                 obj.mod_parent_id = '';
                 obj.expect_score = '';
+                obj.mod_tag = '';
                 obj.lessonArr = '',
                     returnArr.push(obj);
             }
@@ -125,8 +127,10 @@ app.get('/module', function(req, res) {
                 returnArr[i].module_eid = result[i].module_eid
                 returnArr[i].name = result[i].name
                 returnArr[i].mod_parent_id = result[i].mod_parent_id
+                returnArr[i].mod_tag = result[i].mod_tag
                 returnArr[i].expect_score = result[i].expect_score
             }
+            console.log(returnArr)
             res.send({
                 "status": "ok",
                 "code": 200,
@@ -145,7 +149,7 @@ app.get('/courses/designated/:id', function(req, res) {
             })
         }
         console.log(id)
-        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id,tag from course where cou_parent_id =?'
+        let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id,cou_tag from course where cou_parent_id =?'
         connection.query(sql, id, function(err, result) {
             if (err) {
                 return res.send({
@@ -182,7 +186,7 @@ app.get('/comment', function(req, res) {
 
 function stag(eid) {
     return new Promise(function(resolve, reject) {
-        let sql = 'SELECT tag from course where course_eid =' + JSON.stringify(eid)
+        let sql = 'SELECT cou_tag from course where course_eid =' + JSON.stringify(eid)
         connection.query(sql, function(err, result) {
             if (err) {
                 return 1
@@ -195,7 +199,7 @@ function stag(eid) {
 }
 //获取课程tag
 app.get('/allCtags', function(req, res) {
-    let sql = `SELECT tag from course`
+    let sql = `SELECT cou_tag from course`
     connection.query(sql, function(err, result) {
         if (err) {
             return res.send({
@@ -208,8 +212,8 @@ app.get('/allCtags', function(req, res) {
                 // console.log(result.length)
             for (var i in result) {
                 // console.log(result[i].tag)
-                if (JSON.stringify(result[i].tag) != "null") {
-                    const ntag = result[i].tag.split(";")
+                if (JSON.stringify(result[i].cou_tag) != "null") {
+                    const ntag = result[i].cou_tag.split(";")
                         // console.log(ntag)
                     for (var n in ntag) {
                         // console.log(ntag[n])
@@ -253,7 +257,7 @@ app.put('/changeCtag/:id', async(req, res) => {
         console.log(ntag)
         var newarr = ntag.join(';')
         console.log(newarr)
-        let sql = `UPDATE course set tag = ` + JSON.stringify(newarr) + `where course_eid=?`
+        let sql = `UPDATE course set cou_tag = ` + JSON.stringify(newarr) + `where course_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
                 return res.send({
@@ -284,9 +288,10 @@ app.get('/Ctag', function(req, res) {
                 let result1 = []
                 var totalCredit = 0
                 var totalHour = 0
+                    // console.log(JSON.stringify(result[1].cou_tag))
                 for (var i in result) {
-                    if (JSON.stringify(result[i].tag) != "null") {
-                        const ntag = result[i].tag.split(";")
+                    if (JSON.stringify(result[i].cou_tag) != "null") {
+                        const ntag = result[i].cou_tag.split(";")
                         console.log(ntag)
                         if (ntag.indexOf(tag) != -1) {
                             totalCredit += parseFloat(result[i].credits)
@@ -314,12 +319,12 @@ app.post('/addCtag/:id', async(req, res) => {
         } = req.body
         const id = req.params.id
         const oldtag = JSON.parse(await stag(id))
-        const oldtag1 = oldtag[0].tag
+        const oldtag1 = oldtag[0].cou_tag
         console.log(oldtag1)
         if (oldtag1 != null) {
             const newtag = [oldtag1, tag].join(';')
             console.log(newtag)
-            let sql = `UPDATE course set tag = ` + JSON.stringify(newtag) + `where course_eid=?`
+            let sql = `UPDATE course set cou_tag = ` + JSON.stringify(newtag) + `where course_eid=?`
             connection.query(sql, id, function(err, result) {
                 if (err) {
                     return res.send({
@@ -334,7 +339,7 @@ app.post('/addCtag/:id', async(req, res) => {
                 }
             })
         } else {
-            let sql = `UPDATE course set tag = ` + JSON.stringify(tag) + `where course_eid=?`
+            let sql = `UPDATE course set cou_tag = ` + JSON.stringify(tag) + `where course_eid=?`
             connection.query(sql, id, function(err, result) {
                 if (err) {
                     return res.send({
@@ -357,7 +362,7 @@ app.post('/addCtag/:id', async(req, res) => {
     //////////////////////////
 function mtag(eid) {
     return new Promise(function(resolve, reject) {
-        let sql = 'SELECT tag from module where module_eid =' + JSON.stringify(eid)
+        let sql = 'SELECT mod_tag from module where module_eid =' + JSON.stringify(eid)
         connection.query(sql, function(err, result) {
             if (err) {
                 return 1
@@ -375,12 +380,12 @@ app.post('/addMtag/:id', async(req, res) => {
     } = req.body
     const id = req.params.id
     const oldtag = JSON.parse(await mtag(id))
-    const oldtag1 = oldtag[0].tag
+    const oldtag1 = oldtag[0].mod_tag
     console.log(oldtag1)
     if (oldtag1 != null) {
         const newtag = [oldtag1, tag].join(';')
         console.log(newtag)
-        let sql = `UPDATE module set tag = ` + JSON.stringify(newtag) + `where module_eid=?`
+        let sql = `UPDATE module set mod_tag = ` + JSON.stringify(newtag) + `where module_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
                 return res.send({
@@ -395,7 +400,7 @@ app.post('/addMtag/:id', async(req, res) => {
             }
         })
     } else {
-        let sql = `UPDATE module set tag = ` + JSON.stringify(tag) + `where module_eid=?`
+        let sql = `UPDATE module set mod_tag = ` + JSON.stringify(tag) + `where module_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
                 return res.send({
@@ -444,7 +449,7 @@ app.post('/startmodule', function(req, res) {
         }
     })
 });
-//删除课程标签
+//删除模块标签
 app.put('/changeMtag/:id', async(req, res) => {
         let {
             dtag
@@ -457,7 +462,7 @@ app.put('/changeMtag/:id', async(req, res) => {
         }
         const id = req.params.id
         const tag = JSON.parse(await mtag(id))
-        const tag1 = tag[0].tag
+        const tag1 = tag[0].mod_tag
         const ntag = tag1.split(";")
         for (var i = 0; i < ntag.length; i++) {
             if (ntag[i] === dtag) {
@@ -467,7 +472,7 @@ app.put('/changeMtag/:id', async(req, res) => {
         console.log(ntag)
         var newarr = ntag.join(';')
         console.log(newarr)
-        let sql = `UPDATE module set tag = ` + JSON.stringify(newarr) + `where module_eid=?`
+        let sql = `UPDATE module set mod_tag = ` + JSON.stringify(newarr) + `where module_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
                 return res.send({
@@ -497,8 +502,8 @@ app.get('/mtag', function(req, res) {
             } else {
                 let result1 = []
                 for (var i in result) {
-                    if (JSON.stringify(result[i].tag) != "null") {
-                        const ntag = result[i].tag.split(";")
+                    if (JSON.stringify(result[i].mod_tag) != "null") {
+                        const ntag = result[i].mod_tag.split(";")
                             // console.log(ntag)
                         if (ntag.indexOf(tag) != -1) {
                             result1.push(result[i])
@@ -514,7 +519,7 @@ app.get('/mtag', function(req, res) {
     })
     //获取模块tag
 app.get('/allMtags', function(req, res) {
-    let sql = `SELECT tag from module`
+    let sql = `SELECT mod_tag from module`
     connection.query(sql, function(err, result) {
         if (err) {
             return res.send({
@@ -527,8 +532,8 @@ app.get('/allMtags', function(req, res) {
                 // console.log(result.length)
             for (var i in result) {
                 // console.log(result[i].tag)
-                if (JSON.stringify(result[i].tag) != "null") {
-                    const ntag = result[i].tag.split(";")
+                if (JSON.stringify(result[i].mod_tag) != "null") {
+                    const ntag = result[i].mod_tag.split(";")
                         // console.log(ntag)
                     for (var n in ntag) {
                         // console.log(ntag[n])
