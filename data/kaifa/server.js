@@ -39,10 +39,11 @@ function handleDisconnect() {
         }
     });
 }
+handleDisconnect();
 setInterval(function() {
     connection.query('SELECT 1');
 }, 5000);
-handleDisconnect();
+
 
 
 //防止异常退出
