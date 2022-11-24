@@ -18,7 +18,7 @@ const {
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '123456',
+    password: '1234',
     port: '3306',
     database: 'course'
 });
@@ -884,7 +884,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "connect over"
+        message: "connect and tag over"
     })
 })
 
