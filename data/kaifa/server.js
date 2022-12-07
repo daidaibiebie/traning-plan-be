@@ -824,7 +824,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "connect and tag over"
+        message: "3.0 err over"
     })
 })
 
