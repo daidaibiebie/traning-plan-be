@@ -18,7 +18,7 @@ const {
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: '123456',
     port: '3306',
     database: 'course'
 });
@@ -67,10 +67,7 @@ app.get('/allcourses', function(req, res) {
     let sql = 'SELECT * from module,course where course.cou_parent_id=module.module_eid'
     connection.query(sql, function(err, result) {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            throw (err)
         } else {
             res.send({
                 "status": "ok",
@@ -101,10 +98,7 @@ app.get('/module', function(req, res) {
     let sql = 'SELECT * from module'
     connection.query(sql, async(err, result) => {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            throw (err)
         } else {
             console.log(JSON.stringify(result[2].mod_tag))
                 //returnArr={名字，iD，lessonArr}
@@ -153,10 +147,7 @@ app.get('/courses/designated/:id', function(req, res) {
         let sql = 'SELECT code,name,englishName,credits,total_hour,teacher_hour,practice_hour,experiment_hour,in_class,out_class,term,exam,start,remark,cou_parent_id,cou_tag from course where cou_parent_id =?'
         connection.query(sql, id, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 res.send({
                     "status": "ok",
@@ -171,10 +162,7 @@ app.get('/comment', function(req, res) {
     let sql = 'show full columns from module '
     connection.query(sql, function(err, result) {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            throw (err)
         } else {
             res.send({
                 "status": "ok",
@@ -203,10 +191,7 @@ app.get('/allCtags', function(req, res) {
     let sql = `SELECT cou_tag from course`
     connection.query(sql, function(err, result) {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            throw (err)
         } else {
             // console.log(result)
             let tag = []
@@ -261,10 +246,7 @@ app.put('/changeCtag/:id', async(req, res) => {
         let sql = `UPDATE course set cou_tag = ` + JSON.stringify(newarr) + `where course_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 res.send({
                     code: 200,
@@ -281,10 +263,7 @@ app.get('/Ctag', function(req, res) {
         let sql = `SELECT * from course `
         connection.query(sql, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 let result1 = []
                 var totalCredit = 0
@@ -328,10 +307,11 @@ app.post('/addCtag/:id', async(req, res) => {
             let sql = `UPDATE course set cou_tag = ` + JSON.stringify(newtag) + `where course_eid=?`
             connection.query(sql, id, function(err, result) {
                 if (err) {
-                    return res.send({
-                        code: 400,
-                        message: err
-                    })
+                    // return res.send({
+                    //     code: 400,
+                    //     message: err
+                    // })
+                    throw (err)
                 } else {
                     res.send({
                         code: 200,
@@ -343,10 +323,7 @@ app.post('/addCtag/:id', async(req, res) => {
             let sql = `UPDATE course set cou_tag = ` + JSON.stringify(tag) + `where course_eid=?`
             connection.query(sql, id, function(err, result) {
                 if (err) {
-                    return res.send({
-                        code: 400,
-                        message: err
-                    })
+                    throw (err)
                 } else {
                     res.send({
                         code: 200,
@@ -389,10 +366,7 @@ app.post('/addMtag/:id', async(req, res) => {
         let sql = `UPDATE module set mod_tag = ` + JSON.stringify(newtag) + `where module_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 res.send({
                     code: 200,
@@ -404,10 +378,7 @@ app.post('/addMtag/:id', async(req, res) => {
         let sql = `UPDATE module set mod_tag = ` + JSON.stringify(tag) + `where module_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 res.send({
                     code: 200,
@@ -435,10 +406,11 @@ app.post('/startmodule', function(req, res) {
     let sql = `INSERT INTO module(name,mod_parent_id,expect_score) VALUES ('${name}','${mod_parent_id}','${expect_score}')`
     connection.query(sql, function(err, result) {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            // return res.send({
+            //     code: 400,
+            //     message: err
+            // })
+            throw (err)
         } else {
             result = eval(result)
             console.log(result.insertId)
@@ -476,10 +448,7 @@ app.put('/changeMtag/:id', async(req, res) => {
         let sql = `UPDATE module set mod_tag = ` + JSON.stringify(newarr) + `where module_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 res.send({
                     code: 200,
@@ -496,10 +465,7 @@ app.get('/mtag', function(req, res) {
         let sql = `SELECT * from module  `
         connection.query(sql, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 let result1 = []
                 for (var i in result) {
@@ -523,10 +489,7 @@ app.get('/allMtags', function(req, res) {
     let sql = `SELECT mod_tag from module`
     connection.query(sql, function(err, result) {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            throw (err)
         } else {
             console.log(result)
             let tag = []
@@ -559,10 +522,7 @@ function judgemodule(id) {
     let sql = "SELECT * from module where module_eid=" + JSON.stringify(id)
     connection.query(sql, function(err, result) {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            throw (err)
         } else {
 
         }
@@ -607,10 +567,7 @@ app.post('/startcourse', function(req, res) {
                         message: '该课程名已存在'
                     })
                 }
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 result = eval(result)
                 console.log(result.insertId)
@@ -669,10 +626,7 @@ app.put('/revise/course/:eid', function(req, res) {
                         message: "课程代号,课程名,课程英文名不得为空"
                     })
                 }
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 res.send({
                     code: 200,
@@ -704,10 +658,7 @@ app.put('/revise/module/:eid', function(req, res) {
             let sql = `UPDATE module set name=` + JSON.stringify(name) + `,expect_score=` + JSON.stringify(expect_score) + `where module_eid=?`
             connection.query(sql, eid, function(err, result) {
                 if (err) {
-                    return res.send({
-                        code: 400,
-                        message: err
-                    })
+                    throw (err)
                 } else {
                     res.send({
                         code: 200,
@@ -728,10 +679,7 @@ app.delete('/endcourse/:eid', function(req, res) {
         let sql = `DELETE from course where course_eid=?`
         connection.query(sql, eid, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
                 res.send({
                     code: 200,
@@ -757,10 +705,7 @@ app.delete('/endmodule/:eid', function(req, res) {
     let sql = `delete  from module where module_eid in (` + eid + `)`
     connection.query(sql, function(err, result) {
         if (err) {
-            return res.send({
-                code: 400,
-                message: err
-            })
+            throw (err)
         } else {
             console.log(JSON.stringify(result))
             console.log((JSON.stringify(result))[31])
@@ -843,10 +788,7 @@ app.post('/dropcourse', function(req, res) {
         let sql = `UPDATE course SET cou_parent_id =` + JSON.stringify(cou_parent_id) + ` where course_eid =` + JSON.stringify(courses_eid)
         connection.query(sql, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
 
                 res.send({
@@ -867,10 +809,7 @@ app.post('/dropmodule', function(req, res) {
         let sql = `UPDATE module SET mod_parent_id =` + JSON.stringify(mod_parent_id) + ` where module_eid =` + JSON.stringify(module_eid)
         connection.query(sql, function(err, result) {
             if (err) {
-                return res.send({
-                    code: 400,
-                    message: err
-                })
+                throw (err)
             } else {
 
                 res.send({
