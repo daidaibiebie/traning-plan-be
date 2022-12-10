@@ -200,10 +200,10 @@ app.get('/allCtags', function(req, res) {
                 // console.log(result[i].tag)
                 if (JSON.stringify(result[i].cou_tag) != "null") {
                     const ntag = result[i].cou_tag.split(";")
-                        // console.log(ntag)
+                    console.log(ntag)
                     for (var n in ntag) {
-                        // console.log(ntag[n])
-                        // console.log(tag.indexOf(ntag[n]))
+                        console.log(ntag[n])
+                        console.log(tag.indexOf(ntag[n]))
                         if (tag.indexOf(ntag[n]) == -1) {
                             tag.push.apply(tag, ntag)
                         }
@@ -222,38 +222,114 @@ app.get('/allCtags', function(req, res) {
 
 //删除课程标签
 app.put('/changeCtag/:id', async(req, res) => {
-        let {
-            dtag
-        } = req.body
-        if (!dtag) {
-            return res.send({
-                code: 412,
-                message: '注意部分参数不能为空'
+    let {
+        dtag
+    } = req.body
+    if (!dtag) {
+        return res.send({
+            code: 412,
+            message: '注意部分参数不能为空'
+        })
+    }
+    const id = req.params.id
+    const tag = JSON.parse(await stag(id))
+    const tag1 = tag[0].tag
+    const ntag = tag1.split(";")
+    for (var i = 0; i < ntag.length; i++) {
+        if (ntag[i] === dtag) {
+            ntag.splice(i, 1);
+        }
+    }
+    console.log(ntag)
+    var newarr = ntag.join(';')
+    console.log(newarr)
+    let sql = `UPDATE course set cou_tag = ` + JSON.stringify(newarr) + `where course_eid=?`
+    connection.query(sql, id, function(err, result) {
+        if (err) {
+            throw (err)
+        } else {
+            res.send({
+                code: 200,
+                message: "课程标签删除成功"
             })
         }
-        const id = req.params.id
-        const tag = JSON.parse(await stag(id))
-        const tag1 = tag[0].tag
-        const ntag = tag1.split(";")
-        for (var i = 0; i < ntag.length; i++) {
-            if (ntag[i] === dtag) {
-                ntag.splice(i, 1);
-            }
-        }
-        console.log(ntag)
-        var newarr = ntag.join(';')
-        console.log(newarr)
-        let sql = `UPDATE course set cou_tag = ` + JSON.stringify(newarr) + `where course_eid=?`
+    })
+})
+
+//修改课程tag
+app.put('/revise/Ctag/:id', function(req, res) {
+    let id = req.params.id
+    let {
+        ctag
+    } = req.body
+    if (!id) {
+        return res.status(400).json({
+            message: "invalid parameters"
+        })
+    }
+    if (ctag == "null" || ctag == "NULL" || ctag == "") {
+        let sql = `UPDATE course set cou_tag = null where course_eid=?`
         connection.query(sql, id, function(err, result) {
             if (err) {
                 throw (err)
             } else {
                 res.send({
                     code: 200,
-                    message: "课程标签删除成功"
+                    message: "课程标签修改成功"
                 })
             }
         })
+    } else {
+        let sql = `UPDATE course set cou_tag = ` + JSON.stringify(ctag) + `where course_eid=?`
+        connection.query(sql, id, function(err, result) {
+            if (err) {
+                throw (err)
+            } else {
+                res.send({
+                    code: 200,
+                    message: "课程标签修改成功"
+                })
+            }
+        })
+    }
+})
+
+//修改模块tag
+app.put('/revise/Mtag/:id', function(req, res) {
+        let id = req.params.id
+        let {
+            mtag
+        } = req.body
+        if (!id) {
+            return res.status(400).json({
+                message: "invalid parameters"
+            })
+        }
+        if (mtag == "null" || mtag == "NULL" || mtag == "") {
+            let sql = `UPDATE module set mod_tag = null where module_eid=?`
+            connection.query(sql, id, function(err, result) {
+                if (err) {
+                    throw (err)
+                } else {
+                    res.send({
+                        code: 200,
+                        message: "模块标签修改成功"
+                    })
+                }
+            })
+        } else {
+            let sql = `UPDATE module set mod_tag = ` + JSON.stringify(mtag) + `where module_eid=?`
+            connection.query(sql, id, function(err, result) {
+                if (err) {
+                    throw (err)
+                } else {
+                    res.send({
+                        code: 200,
+                        message: "模块标签修改成功"
+                    })
+                }
+            })
+        }
     })
     //查询带该标签的课程
 app.get('/Ctag', function(req, res) {
@@ -601,7 +677,7 @@ app.put('/revise/course/:eid', function(req, res) {
             cou_parent_id
         } = req.body
         let eid = req.params.eid
-        if (!code || !mame || !englishName || !credits || !total_hour || !term || !exam || !start || !cou_parent_id) {
+        if (!code || !name || !englishName || !credits || !total_hour || !term || !exam || !start || !cou_parent_id) {
             return res.send({
                 code: 412,
                 message: '注意部分参数不能为空'
@@ -671,7 +747,7 @@ app.put('/revise/module/:eid', function(req, res) {
     //删除课程
 app.delete('/endcourse/:eid', function(req, res) {
         const eid = req.params.eid
-        if (eid) {
+        if (!eid) {
             return res.status(400).json({
                 message: "invalid parameters"
             })
@@ -824,7 +900,7 @@ app.post('/dropmodule', function(req, res) {
 app.get('/', function(req, res) {
     res.send({
         code: 200,
-        message: "3.0 err over"
+        message: "3.1 bug over"
     })
 })
 
