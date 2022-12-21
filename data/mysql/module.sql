@@ -28,26 +28,12 @@ INSERT INTO `module` VALUE(8,'学科必修',3,'','');
 INSERT INTO `module` VALUE(9,'实践必修',4,'','');
 INSERT INTO `module` VALUE(10,'专业必修',5,'','');
 INSERT INTO `module` VALUE(11,'专业选修',5,'','');
-INSERT INTO `module` VALUE(12,'课外教育项目',6,'','');
-INSERT INTO `module` VALUE(13,'通识选修',7,'','');
-INSERT INTO `module` VALUE(14,'学科必修',8,'','');
-INSERT INTO `module` VALUE(15,'实践必修',9,'','');
-INSERT INTO `module` VALUE(16,'通识必修',7,'','');
-INSERT INTO `module` VALUE(17,'学科必修',8,'','');
-INSERT INTO `module` VALUE(18,'专业必修',10,'','');
-INSERT INTO `module` VALUE(19,'计算机系统模块',11,'','');
-INSERT INTO `module` VALUE(20,'物联网工程模块',11,'','');
-INSERT INTO `module` VALUE(21,'人工智能模块',11,'','');
-INSERT INTO `module` VALUE(22,'数据科学模块',11,'','');
-INSERT INTO `module` VALUE(23,'网络安全模块',11,'','');
-INSERT INTO `module` VALUE(24,'公共模块',11,'','');
-INSERT INTO `module` VALUE(25,'实践必修',9,'','');
-INSERT INTO `module` VALUE(26,'课外教育项目',12,'','');
-INSERT INTO `module` VALUE(27,'通识选修',2,'','');
-INSERT INTO `module` VALUE(29,'通识选修课',1,'','');
-
-
-
+INSERT INTO `module` VALUE(20,'计算机系统模块',11,'','');
+INSERT INTO `module` VALUE(21,'物联网工程模块',11,'','');
+INSERT INTO `module` VALUE(22,'人工智能模块',11,'','');
+INSERT INTO `module` VALUE(23,'数据科学模块',11,'','');
+INSERT INTO `module` VALUE(24,'网络安全模块',11,'','');
+INSERT INTO `module` VALUE(25,'公共模块',11,'','');
 
 
 
