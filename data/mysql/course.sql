@@ -1,5 +1,5 @@
 
--- Table structure for employees
+-- Table structure for employees1
 -- ----------------------------
 # ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '1234';
 SET FOREIGN_KEY_CHECKS=0;
