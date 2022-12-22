@@ -13,7 +13,7 @@ const {
 const {
     CLIENT_NO_SCHEMA
 } = require('mysql/lib/protocol/constants/client');
-
+/////////////////
 //数据库连接
 const connection = mysql.createConnection({
     host: 'localhost',
